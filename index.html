@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Website API Docs</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+    <main class="page-container">
+        <header class="header">
+            <h1>Journal API Reference</h1>
+            <p class="subtitle">CRUD in Database </p>
+        </header>
+
+        <!-- POST /auth/register -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-post">POST</span>
+                <code class="route-title">/auth/register</code>
+            </div>
+
+            <p class="description">Creates a brand new user account. This endpoint is public and does not require a
+                token.</p>
+
+            <div class="code-container">
+                <div class="code-label">Request Body</div>
+                <pre><code>{
+  "name": "user1",
+  "email": "user1@example.com",
+  "password": "pass121323"
+}</code></pre>
+            </div>
+
+            <div class="code-container">
+                <div class="code-label">User Result (201 Created)</div>
+                <pre><code>{
+  "id": "665f1c2a9b1e8a0012ab34cd",
+  "name": "user1",
+  "email": "user1@example.com",
+  "isAdmin": false,
+  "createdAt": "2025-06-01T10:15:30.000Z"
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "name, email and password are required" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "password must be at least 8 characters" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">409 Conflict</span>
+                        <pre><code>{ "error": "An account with this email already exists" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POST /auth/login -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-post">POST</span>
+                <code class="route-title">/auth/login</code>
+            </div>
+
+            <p class="description">Checks credentials and returns a signed authentication token valid for one hour.</p>
+
+            <div class="code-container">
+                <div class="code-label">Request Body</div>
+                <pre><code>{
+  "email": "user1@example.com",
+  "password": "pass121323"
+}</code></pre>
+            </div>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>{
+  "token": "eyJhbGciOi...",
+  "user": {
+    "id": "665f1c2a9b1e8a0012ab34cd",
+    "name": "user1 ",
+    "email": "user1@example.com",
+    "isAdmin": false,
+    "createdAt": "2025-06-01T10:15:30.000Z"
+  }
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "email and password are required" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">401 Unauthorized</span>
+                        <pre><code>{ "error": "Invalid email or password" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /admin/users -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-get">GET</span>
+                <code class="route-title">/admin/users</code>
+            </div>
+
+            <p class="description">Lists all registered accounts in the database. Requires an admin-level Bearer token.
+            </p>
+
+            <div class="code-container">
+                <div class="code-label">Admin Result (200 OK)</div>
+                <pre><code>[
+  {
+    "id": "665f1c2a9b1e8a0012ab34cd",
+    "name": "user1 ",
+    "email": "user1@example.com",
+    "isAdmin": true,
+    "createdAt": "2025-06-01T10:15:30.000Z"
+  }
+]</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">401 Unauthorized</span>
+                        <pre><code>{ "error": "Log in first: send Authorization: Bearer <token>" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "Admins only" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /users/:id -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-get">GET</span>
+                <code class="route-title">/users/:id</code>
+            </div>
+
+            <p class="description">Retrieves profile information for a specific user. Owners can only view their own
+                account.</p>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>{
+  "id": "665f1c2a9b1e8a0012ab34cd",
+  "name": "user1 ",
+  "email": "user1@example.com",
+  "isAdmin": false,
+  "createdAt": "2025-06-01T10:15:30.000Z"
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">401 Unauthorized</span>
+                        <pre><code>{ "error": "Token is missing, invalid or expired" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">404 Not Found</span>
+                        <pre><code>{ "error": "User not found" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PATCH /users/:id -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-patch">PATCH</span>
+                <code class="route-title">/users/:id</code>
+            </div>
+
+            <p class="description">Updates an account's name or email. Requires at least one field to be sent.</p>
+
+            <div class="code-container">
+                <div class="code-label">Request Body</div>
+                <pre><code>{
+  "name": "user1 C."
+}</code></pre>
+            </div>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>{
+  "id": "665f1c2a9b1e8a0012ab34cd",
+  "name": "user1 C.",
+  "email": "user1@example.com",
+  "isAdmin": false,
+  "createdAt": "2025-06-01T10:15:30.000Z"
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "Send at least one of name or email" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">409 Conflict</span>
+                        <pre><code>{ "error": "That email is already in use" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DELETE /users/:id -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-delete">DELETE</span>
+                <code class="route-title">/users/:id</code>
+            </div>
+
+            <p class="description">Deletes the user's account profile without removing journal entries.</p>
+
+            <div class="code-container">
+                <div class="code-label">User Result (204 No Content)</div>
+                <pre><code>// Empty response body</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">404 Not Found</span>
+                        <pre><code>{ "error": "User not found" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /:userId/:month -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-get">GET</span>
+                <code class="route-title">/:userId/:month</code>
+            </div>
+
+            <p class="description">Lists all journal entries created by the user for a specified month (1 to 12).</p>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>[
+  {
+    "_id": "6660a1b2c3d4e5f600112233",
+    "user": "665f1c2a9b1e8a0012ab34cd",
+    "month": 3,
+    "day": 14,
+    "content": "example journal content ",
+    "createdAt": "2025-03-14T18:02:11.000Z",
+    "updatedAt": "2025-03-14T18:02:11.000Z",
+    "__v": 0
+  }
+]</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "month must be a number from 1 to 12" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POST /:userId/:month -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-post">POST</span>
+                <code class="route-title">/:userId/:month</code>
+            </div>
+
+            <p class="description">Creates a single journal entry for a given day. Only one entry is allowed per day.
+            </p>
+
+            <div class="code-container">
+                <div class="code-label">Request Body</div>
+                <pre><code>{
+  "day": 14,
+  "content": "example journal content "
+}</code></pre>
+            </div>
+
+            <div class="code-container">
+                <div class="code-label">User Result (201 Created)</div>
+                <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "example journal content ",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:02:11.000Z",
+  "__v": 0
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "day and content are required" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "Journal validation failed: day: Path `day` (40) is more than maximum allowed value 31." }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">409 Conflict</span>
+                        <pre><code>{ "error": "This user already has an entry for that day" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GET /:userId/:month/:day -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-get">GET</span>
+                <code class="route-title">/:userId/:month/:day</code>
+            </div>
+
+            <p class="description">Retrieves the entry for a specific day of the month.</p>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "example journal content ",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:02:11.000Z",
+  "__v": 0
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "day must be a number from 1 to 31" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">404 Not Found</span>
+                        <pre><code>{ "error": "Entry not found" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PUT /:userId/:month/:day -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-put">PUT</span>
+                <code class="route-title">/:userId/:month/:day</code>
+            </div>
+
+            <p class="description">Replaces the written content of an existing journal entry.</p>
+
+            <div class="code-container">
+                <div class="code-label">Request Body</div>
+                <pre><code>{
+  "content": "Went for a long walk, then coffee."
+}</code></pre>
+            </div>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "Went for a long walk, then coffee.",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:15:00.000Z",
+  "__v": 0
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "content is required" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">404 Not Found</span>
+                        <pre><code>{ "error": "Entry not found" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PATCH /:userId/:month/:day -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-patch">PATCH</span>
+                <code class="route-title">/:userId/:month/:day</code>
+            </div>
+
+            <p class="description">Updates existing entry fields. Currently modifies the content property.</p>
+
+            <div class="code-container">
+                <div class="code-label">Request Body</div>
+                <pre><code>{
+  "content": "Went for a long walk, then coffee."
+}</code></pre>
+            </div>
+
+            <div class="code-container">
+                <div class="code-label">User Result (200 OK)</div>
+                <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "Went for a long walk, then coffee.",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:15:00.000Z",
+  "__v": 0
+}</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">400 Bad Request</span>
+                        <pre><code>{ "error": "Send content to change" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">404 Not Found</span>
+                        <pre><code>{ "error": "Entry not found" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DELETE /:userId/:month/:day -->
+        <section class="card">
+            <div class="card-header">
+                <span class="badge badge-delete">DELETE</span>
+                <code class="route-title">/:userId/:month/:day</code>
+            </div>
+
+            <p class="description">Deletes a specific journal entry permanently.</p>
+
+            <div class="code-container">
+                <div class="code-label">User Result (204 No Content)</div>
+                <pre><code>// Empty response body</code></pre>
+            </div>
+
+            <div class="errors-section">
+                <span class="section-title">Error Responses</span>
+                <div class="error-flex-container">
+                    <div class="error-item">
+                        <span class="status-code">403 Forbidden</span>
+                        <pre><code>{ "error": "You can only access your own data" }</code></pre>
+                    </div>
+                    <div class="error-item">
+                        <span class="status-code">404 Not Found</span>
+                        <pre><code>{ "error": "Entry not found" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</body>
+
+</html>
