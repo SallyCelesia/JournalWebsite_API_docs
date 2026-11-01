@@ -155,3 +155,51 @@ code {
   margin-bottom: 6px;
   text-transform: uppercase;
 }
+
+/* Concepts Section Styling */
+.section-heading {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.badge-concept {
+  background-color: var(--accent-amber);
+  color: #121316;
+}
+
+.concepts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.concept-card {
+  background-color: var(--bg-code);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--accent-amber);
+  border-radius: 0 6px 6px 0;
+  padding: 16px;
+}
+
+.concept-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-amber);
+  margin-bottom: 6px;
+}
+
+.concept-card .description {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.concept-card code {
+  background-color: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}

@@ -527,6 +527,74 @@
                 </div>
             </div>
         </section>
+
+        <!-- Concepts Section -->
+        <section class="card concepts-section">
+            <div class="card-header">
+                <span class="badge badge-concept">OVERVIEW</span>
+                <h2 class="section-heading">Concepts Implemented</h2>
+            </div>
+
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <span class="concept-title">Express Routing</span>
+                    <p class="description">Each route uses a method and path (e.g., <code>PATCH /users/:id</code>).
+                        Route parameters like <code>:id</code> and <code>:userId</code> are read using
+                        <code>req.params</code>.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Middleware Chains</span>
+                    <p class="description">Routes execute functions in sequence (such as <code>requireLogin</code> then
+                        <code>requireOwner</code>/<code>requireAdmin</code>). Each function either calls
+                        <code>next()</code> or terminates with an error response.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Password Hashing with bcrypt</span>
+                    <p class="description">Passwords are securely stored as hashes, never plain text. Uses
+                        <code>bcrypt.hash</code> during registration and <code>bcrypt.compare</code> during login.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">JWT Login Tokens</span>
+                    <p class="description">Login generates a signed token valid for 1 hour. Protected routes read it
+                        from the <code>Authorization: Bearer &lt;token&gt;</code> header and verify it with
+                        <code>JWT_SECRET</code>.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Ownership Checks</span>
+                    <p class="description"><code>requireOwner</code> verifies that the user ID in the URL matches the ID
+                        stored in the token, preventing access to other users' data.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Admin Role</span>
+                    <p class="description">The <code>isAdmin</code> flag controls access to <code>/admin/users</code>.
+                        <code>requireAdmin</code> reads this directly from the database on every request so role
+                        revocations take effect immediately.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Schemas and Models</span>
+                    <p class="description">Mongoose schemas enforce structure and validation rules, mapping to the
+                        <code>users</code> and <code>journals</code> MongoDB collections.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Validation</span>
+                    <p class="description">Field constraints (such as <code>month</code> from 1 to 12) run on create and
+                        update with <code>runValidators: true</code>, alongside parameter checks in route handlers.</p>
+                </div>
+
+                <div class="concept-card">
+                    <span class="concept-title">Unique Index</span>
+                    <p class="description">A compound index on <code>{user, month, day}</code> ensures that a user can
+                        create at most one entry per day.</p>
+                </div>
+            </div>
+        </section>
     </main>
 
 </body>
