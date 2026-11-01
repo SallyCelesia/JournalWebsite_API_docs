@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal API - Code Snippets</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <main class="page-container">
+    <header class="header">
+      <h1>Backend Route Implementation</h1>
+      <p class="subtitle">
+        <span>Express route definitions, sample request payloads, and success responses.</span>
+        <a href="index.html" class="nav-btn">&larr; Back to API Docs</a>
+      </p>
+    </header>
+
+    <!-- POST /auth/register -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-post">POST</span>
+        <code class="route-title">/auth/register</code>
+      </div>
+      <p class="description">Handles user registration by hashing password with bcrypt and creating a user record.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.post('/auth/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'name, email and password are required' });
+    }
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ error: 'password must be at least 8 characters' });
+    }
+    const existing = await User.findOne({ email: email.toLowerCase().trim() });
+    if (existing) {
+      return res.status(409).json({ error: 'An account with this email already exists' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hash });
+    res.status(201).json(publicUser(user));
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Body</div>
+        <pre><code>{
+  "name": "user1",
+  "email": "user1@example.com",
+  "password": "pass121323"
+}</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (201 Created)</div>
+        <pre><code>{
+  "id": "665f1c2a9b1e8a0012ab34cd",
+  "name": "user1 Celesia",
+  "email": "user1@example.com",
+  "isAdmin": false,
+  "createdAt": "2025-06-01T10:15:30.000Z"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- POST /auth/login -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-post">POST</span>
+        <code class="route-title">/auth/login</code>
+      </div>
+      <p class="description">Verifies email and password hash, then returns a signed 1-hour JWT token with user details.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.post('/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'email and password are required' });
+    }
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    const matches = await bcrypt.compare(password, user.password);
+    if (!matches) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ sub: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, user: publicUser(user) });
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Body</div>
+        <pre><code>{
+  "email": "user1@example.com",
+  "password": "pass121323"
+}</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>{
+  "token": "eyJhbGciOi...",
+  "user": {
+    "id": "665f1c2a9b1e8a0012ab34cd",
+    "name": "user1 Celesia",
+    "email": "user1@example.com",
+    "isAdmin": false,
+    "createdAt": "2025-06-01T10:15:30.000Z"
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- GET /admin/users -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-get">GET</span>
+        <code class="route-title">/admin/users</code>
+      </div>
+      <p class="description">Fetches all users from MongoDB using admin middleware protection.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.get('/admin/users', requireLogin, requireAdmin, async (req, res) => {
+  try {
+    const users = await User.find();
+    res.json(users.map(publicUser));
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Headers (No Body)</div>
+        <pre><code>GET /admin/users HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOi...</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>[
+  {
+    "id": "665f1c2a9b1e8a0012ab34cd",
+    "name": "user1 Celesia",
+    "email": "user1@example.com",
+    "isAdmin": true,
+    "createdAt": "2025-06-01T10:15:30.000Z"
+  }
+]</code></pre>
+      </div>
+    </section>
+
+    <!-- GET /users/:id -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-get">GET</span>
+        <code class="route-title">/users/:id</code>
+      </div>
+      <p class="description">Validates MongoDB ObjectId and verifies ownership before returning user profile data.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.get('/users/:id', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(publicUser(user));
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Headers (No Body)</div>
+        <pre><code>GET /users/665f1c2a9b1e8a0012ab34cd HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOi...</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>{
+  "id": "665f1c2a9b1e8a0012ab34cd",
+  "name": "user1 Celesia",
+  "email": "user1@example.com",
+  "isAdmin": false,
+  "createdAt": "2025-06-01T10:15:30.000Z"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- PATCH /users/:id -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-patch">PATCH</span>
+        <code class="route-title">/users/:id</code>
+      </div>
+      <p class="description">Updates user name or email with validation and handles potential duplicate email errors.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.patch('/users/:id', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+    const updates = {};
+    if (req.body.name !== undefined) updates.name = req.body.name;
+    if (req.body.email !== undefined) updates.email = req.body.email;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Send at least one of name or email' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    );
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(publicUser(user));
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ error: 'That email is already in use' });
+    }
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Body</div>
+        <pre><code>{
+  "name": "user1 C."
+}</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>{
+  "id": "665f1c2a9b1e8a0012ab34cd",
+  "name": "user1 C.",
+  "email": "user1@example.com",
+  "isAdmin": false,
+  "createdAt": "2025-06-01T10:15:30.000Z"
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- DELETE /users/:id -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-delete">DELETE</span>
+        <code class="route-title">/users/:id</code>
+      </div>
+      <p class="description">Deletes user record by ID. Returns 204 No Content upon success.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.delete('/users/:id', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.status(204).end();
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Headers (No Body)</div>
+        <pre><code>DELETE /users/665f1c2a9b1e8a0012ab34cd HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOi...</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (204 No Content)</div>
+        <pre><code>// 204 No Content (Empty Response Body)</code></pre>
+      </div>
+    </section>
+
+    <!-- GET /:userId/:month -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-get">GET</span>
+        <code class="route-title">/:userId/:month</code>
+      </div>
+      <p class="description">Queries journal entries for a given user and month (1-12), ordered chronologically by day.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.get('/:userId/:month', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const month = parseWholeNumber(req.params.month);
+    if (month === null || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a number from 1 to 12' });
+    }
+    const entries = await Journal.find({ user: req.params.userId, month }).sort({ day: 1 });
+    res.json(entries);
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Headers (No Body)</div>
+        <pre><code>GET /665f1c2a9b1e8a0012ab34cd/3 HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOi...</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>[
+  {
+    "_id": "6660a1b2c3d4e5f600112233",
+    "user": "665f1c2a9b1e8a0012ab34cd",
+    "month": 3,
+    "day": 14,
+    "content": "Went for a long walk.",
+    "createdAt": "2025-03-14T18:02:11.000Z",
+    "updatedAt": "2025-03-14T18:02:11.000Z",
+    "__v": 0
+  }
+]</code></pre>
+      </div>
+    </section>
+
+    <!-- POST /:userId/:month -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-post">POST</span>
+        <code class="route-title">/:userId/:month</code>
+      </div>
+      <p class="description">Creates a journal entry for the specified day. Rejects duplicates using MongoDB unique compound index.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.post('/:userId/:month', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const month = parseWholeNumber(req.params.month);
+    if (month === null || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a number from 1 to 12' });
+    }
+    const { day, content } = req.body;
+    if (day === undefined || content === undefined) {
+      return res.status(400).json({ error: 'day and content are required' });
+    }
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const entry = await Journal.create({ user: user._id, month, day, content });
+    res.status(201).json(entry);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ error: 'This user already has an entry for that day' });
+    }
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Body</div>
+        <pre><code>{
+  "day": 14,
+  "content": "Went for a long walk."
+}</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (201 Created)</div>
+        <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "Went for a long walk.",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:02:11.000Z",
+  "__v": 0
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- GET /:userId/:month/:day -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-get">GET</span>
+        <code class="route-title">/:userId/:month/:day</code>
+      </div>
+      <p class="description">Fetches a specific day's journal entry for the authenticated user.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.get('/:userId/:month/:day', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const month = parseWholeNumber(req.params.month);
+    const day = parseWholeNumber(req.params.day);
+    if (month === null || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a number from 1 to 12' });
+    }
+    if (day === null || day < 1 || day > 31) {
+      return res.status(400).json({ error: 'day must be a number from 1 to 31' });
+    }
+    const entry = await Journal.findOne({ user: req.params.userId, month, day });
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+    res.json(entry);
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Headers (No Body)</div>
+        <pre><code>GET /665f1c2a9b1e8a0012ab34cd/3/14 HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOi...</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "Went for a long walk.",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:02:11.000Z",
+  "__v": 0
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- PUT /:userId/:month/:day -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-put">PUT</span>
+        <code class="route-title">/:userId/:month/:day</code>
+      </div>
+      <p class="description">Replaces entry text content using findOneAndUpdate with validation.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.put('/:userId/:month/:day', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const month = parseWholeNumber(req.params.month);
+    const day = parseWholeNumber(req.params.day);
+    if (month === null || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a number from 1 to 12' });
+    }
+    if (day === null || day < 1 || day > 31) {
+      return res.status(400).json({ error: 'day must be a number from 1 to 31' });
+    }
+    const { content } = req.body;
+    if (content === undefined) {
+      return res.status(400).json({ error: 'content is required' });
+    }
+    const entry = await Journal.findOneAndUpdate(
+      { user: req.params.userId, month, day },
+      { content },
+      { new: true, runValidators: true }
+    );
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+    res.json(entry);
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Body</div>
+        <pre><code>{
+  "content": "Went for a long walk, then coffee."
+}</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "Went for a long walk, then coffee.",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:15:00.000Z",
+  "__v": 0
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- PATCH /:userId/:month/:day -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-patch">PATCH</span>
+        <code class="route-title">/:userId/:month/:day</code>
+      </div>
+      <p class="description">Updates journal content when sent in request body.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.patch('/:userId/:month/:day', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const month = parseWholeNumber(req.params.month);
+    const day = parseWholeNumber(req.params.day);
+    if (month === null || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a number from 1 to 12' });
+    }
+    if (day === null || day < 1 || day > 31) {
+      return res.status(400).json({ error: 'day must be a number from 1 to 31' });
+    }
+    if (req.body.content === undefined) {
+      return res.status(400).json({ error: 'Send content to change' });
+    }
+    const entry = await Journal.findOneAndUpdate(
+      { user: req.params.userId, month, day },
+      { content: req.body.content },
+      { new: true, runValidators: true }
+    );
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+    res.json(entry);
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Body</div>
+        <pre><code>{
+  "content": "Went for a long walk, then coffee."
+}</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (200 OK)</div>
+        <pre><code>{
+  "_id": "6660a1b2c3d4e5f600112233",
+  "user": "665f1c2a9b1e8a0012ab34cd",
+  "month": 3,
+  "day": 14,
+  "content": "Went for a long walk, then coffee.",
+  "createdAt": "2025-03-14T18:02:11.000Z",
+  "updatedAt": "2025-03-14T18:15:00.000Z",
+  "__v": 0
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- DELETE /:userId/:month/:day -->
+    <section class="card">
+      <div class="card-header">
+        <span class="badge badge-delete">DELETE</span>
+        <code class="route-title">/:userId/:month/:day</code>
+      </div>
+      <p class="description">Deletes a specific journal entry by user ID, month, and day.</p>
+
+      <div class="code-container">
+        <div class="code-label">Express Route Code</div>
+        <pre><code>app.delete('/:userId/:month/:day', requireLogin, requireOwner, async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.userId)) {
+      return res.status(400).json({ error: 'Invalid user id' });
+    }
+    const month = parseWholeNumber(req.params.month);
+    const day = parseWholeNumber(req.params.day);
+    if (month === null || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'month must be a number from 1 to 12' });
+    }
+    if (day === null || day < 1 || day > 31) {
+      return res.status(400).json({ error: 'day must be a number from 1 to 31' });
+    }
+    const entry = await Journal.findOneAndDelete({ user: req.params.userId, month, day });
+    if (!entry) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+    res.status(204).end();
+  } catch (err) {
+    sendError(res, err);
+  }
+});</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Sample Request Headers (No Body)</div>
+        <pre><code>DELETE /665f1c2a9b1e8a0012ab34cd/3/14 HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOi...</code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-label">Success Response (204 No Content)</div>
+        <pre><code>// 204 No Content (Empty Response Body)</code></pre>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

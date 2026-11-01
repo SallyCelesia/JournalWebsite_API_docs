@@ -203,3 +203,27 @@ code {
   border-radius: 4px;
   font-size: 0.85rem;
 }
+
+.header .subtitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.nav-btn {
+  display: inline-block;
+  background-color: var(--accent-amber);
+  color: #121316;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: opacity 0.2s ease;
+}
+
+.nav-btn:hover {
+  opacity: 0.88;
+}
